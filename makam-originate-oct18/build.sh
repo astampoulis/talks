@@ -7,6 +7,11 @@ case "x$1" in
     OUTPUT="dev.html"
     EXTRAOPTS=""
     ;;
+  "xdevlocal")
+    MODE="devlocal"
+    OUTPUT="devlocal.html"
+    EXTRAOPTS=""
+    ;;
   "xonline")
     MODE="online"
     OUTPUT="index.html"
@@ -33,6 +38,15 @@ if [[ $MODE == "offline" && ! -e MathJax ]]; then
     git clone git://github.com/mathjax/MathJax
 fi
 
+function get_docker_hash {
+  shasum Dockerfile | cut -f 1 -d' '
+}
+
+if [[ ! -e .docker-built || $(cat .docker-built) != $(get_docker_hash) ]]; then
+  docker-compose build
+  get_docker_hash > .docker-built
+fi
+
 docker-compose run slides bash -c "pandoc --mathjax=$MATHJAX $EXTRAOPTS -s -t revealjs slides.md -o $OUTPUT; chown $(id -u):$(id -g) $OUTPUT"
 
 sed -i -r \
@@ -41,6 +55,6 @@ sed -i -r \
         -e '/Reveal.initialize\(\{$/ iReveal.addKeyBinding(81, function(){ webUI.reset({ animations: false }); });\n' \
         $OUTPUT
 
-if [[ $MODE == "offline" ]]; then
+if [[ $MODE == "offline" || $MODE == "devlocal" ]]; then
   sed -i -r -e 's@https://gj20qvg6wb.execute-api.us-east-1.amazonaws.com/icfp2018talk/makam/query@http://localhost:3000/makam/query@' $OUTPUT
 fi

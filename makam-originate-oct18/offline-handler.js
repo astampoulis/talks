@@ -76,7 +76,9 @@ const _runAndPersist = input => {
     "--persist-state",
     statePath,
     "-I",
-    "/tmp/dependencies"
+    "/tmp/dependencies",
+    "-I",
+    "/makam/examples"
   ]);
 
   fs.writeFileSync(outputPath, JSON.stringify(output));

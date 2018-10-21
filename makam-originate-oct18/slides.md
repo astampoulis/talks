@@ -10,7 +10,7 @@ header-includes:
   <script src="https://unpkg.com/makam-webui/makam-codemirror.js"></script>
   <script src="https://unpkg.com/makam-webui/makam-webui.js"></script>
   <link rel="stylesheet" href="slides.css" />
-  <script type="text/javascript">var options = {}; options['makamLambdaURL'] = 'https://gj20qvg6wb.execute-api.us-east-1.amazonaws.com/icfp2018talk/makam/query'; options['stateBlocksEditable'] = true; options['autoRefresh'] = true; options['matchBrackets'] = true; options['urlOfDependency'] = (function(filename) { return new URL("../justcode/" + filename, document.baseURI).href; }); var webUI; document.addEventListener("DOMContentLoaded", function() { webUI = new LiterateWebUI(options); webUI.initialize(); });</script>
+  <script type="text/javascript">var options = {}; options['makamLambdaURL'] = 'https://gj20qvg6wb.execute-api.us-east-1.amazonaws.com/icfp2018talk/makam/query'; options['stateBlocksEditable'] = true; options['autoRefresh'] = true; options['matchBrackets'] = true; options['urlOfDependency'] = (function(filename) { return new URL("/makam/examples/tinyml" + filename, document.baseURI).href; }); var webUI; document.addEventListener("DOMContentLoaded", function() { webUI = new LiterateWebUI(options); webUI.initialize(); });</script>
 transition: fade
 theme: custom
 history: true
@@ -31,6 +31,16 @@ pagetitle: Makam
 <div style="margin-top: 3em;">
 Antonis Stampoulis (Originate NYC), Adam Chlipala (MIT CSAIL)
 </div>
+
+```makam-hidden
+%use "tinyml/init".
+```
+
+```makam-hidden
+tests : testsuite. %testsuite tests.
+typechecker : string -> prop.
+typechecker Program :- typechecker Program S, print_string `${S}\n`.
+```
 
 ---
 
@@ -89,10 +99,6 @@ For example, PLT Redex and the K framework can be used to implement operational 
 ### Simply typed lambda calculus
 
 ---
-
-```makam-hidden
-tests : testsuite. %testsuite tests.
-```
 
 ```makam-hidden
 term : type.

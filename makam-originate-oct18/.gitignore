@@ -1,3 +1,6 @@
 MathJax/
 reveal.js/
 offline.html
+dev.html
+devlocal.html
+.docker-built
