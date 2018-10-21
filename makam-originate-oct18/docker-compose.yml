@@ -1,0 +1,11 @@
+version: '2'
+services:
+  slides:
+    build:
+      context: .
+    volumes:
+      - ./:/slides
+    ports:
+      - 3000:3000
+      - 8000:8000
+    working_dir: /slides
