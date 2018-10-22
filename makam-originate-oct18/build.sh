@@ -47,7 +47,7 @@ if [[ ! -e .docker-built || $(cat .docker-built) != $(get_docker_hash) ]]; then
   get_docker_hash > .docker-built
 fi
 
-docker-compose run slides bash -c "pandoc --mathjax=$MATHJAX $EXTRAOPTS -s -t revealjs slides.md -o $OUTPUT; chown $(id -u):$(id -g) $OUTPUT"
+docker-compose run slides bash -c "pandoc --no-highlight --mathjax=$MATHJAX $EXTRAOPTS -s -t revealjs slides.md -o $OUTPUT; chown $(id -u):$(id -g) $OUTPUT"
 
 sed -i -r \
         -e 's@<pre class="([^"]+)"><code>@<pre><code class="language-\1">@' \

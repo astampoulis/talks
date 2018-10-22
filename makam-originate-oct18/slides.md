@@ -22,14 +22,11 @@ minScale: 1
 pagetitle: Makam
 ---
 
-# Prototyping a Functional Language <br /> using Higher-Order Logic Programming
-
-<div style="margin-top: 1em;">
-#### A Functional Pearl on Learning the Ways of λProlog/Makam
-</div>
+# Language Prototyping <br />using the Makam metalanguage
 
 <div style="margin-top: 3em;">
-Antonis Stampoulis (Originate NYC), Adam Chlipala (MIT CSAIL)
+Originate Talks: Antonis Stampoulis <br />
+October 23rd, 2018
 </div>
 
 ```makam-hidden
@@ -44,29 +41,138 @@ typechecker Program :- typechecker Program S, print_string `${S}\n`.
 
 ---
 
-# PL research ideas: <br/> ability to experiment ↔ implementation time
+# Language design
 
----
-
-# Metalanguages help minimize implementation time
-
-<aside class="notes">
-For example, PLT Redex and the K framework can be used to implement operational semantics quickly, Racket for implementing sophisticated DSLs, etc.
-</aside>
-
----
-
-# λProlog is good for prototyping advanced type systems
-
-<div class="fragment" data-fragment-index="1">
-- Concise and readable rules
-- Very expressive
-- Incremental definitions
+<div class="fragment">
+- general-purpose programming languages (e.g. Rust)
+- type system for an existing language (e.g. Flow, TypeScript)
+- domain-specific languages (e.g. SQL, music composition, etc.)
 </div>
 
 ---
 
-# Example implemented in the paper
+# Language design
+
+<img src="images/Csg_tree.png" width=500 />
+
+---
+
+# Implementing a design is key
+
+---
+
+# Ability to experiment with design ↔ implementation time
+
+---
+
+$$e \; := \; \texttt{lam}(x.e) \; | \; \texttt{app}(e_f, e_a) \; | \; x$$
+$$\tau \; := \; \tau_1 \to \tau_2$$
+$$\frac{x : \tau \in \Gamma}{\Gamma \vdash x : \tau}$$
+$$\frac{\Gamma, x : \tau_1 \vdash e : \tau_2}{\Gamma \vdash \texttt{lam}(x.e) : \tau_1 \to \tau_2}
+\hspace{2em}
+\frac{\Gamma \vdash e_f : \tau_1 \to \tau_2 \hspace{0.5em} \Gamma \vdash e_a : \tau_1}{\Gamma \vdash \texttt{app}(e_f, e_a) : \tau_2}$$
+
+---
+
+- Abstract syntax
+- Interpretation
+- Type checking/type inference
+- Compilation phases
+
+<div class="fragment" style="margin-top: 20px;">
+# Languages and "relationships" between them
+</div>
+
+---
+
+# Makam: a metalanguage for prototyping languages
+
+<div class="fragment" style="font-style: italic;">
+(more precisely, for prototyping relationships between languages)
+</div>
+
+---
+
+```makam
+expr, typ : type. 
+lam : (expr -> expr) -> expr.
+app : expr -> expr -> expr.
+arrow : typ -> typ -> typ.
+
+typeof : expr -> typ -> prop.
+
+typeof (lam X_E) = (arrow T1 T2)
+  when (x:expr -> typeof x = T1 -> typeof (X_E x) = T2).
+
+typeof (app Ef Ea) = T2
+  when typeof Ef = (arrow T1 T2), typeof Ea = T1.
+
+typeof (lam (fun x => x)) T ?
+```
+
+---
+
+# The story of Makam so far
+
+---
+
+<img src="images/akw.jpg" width=700 />
+
+---
+
+<img src="images/csail.jpg" width=700 />
+
+---
+
+<img src="images/adamc2018.jpg" height=500 />
+
+---
+
+<img src="images/dale.jpg" width=300 />
+<img src="images/gopalan.jpg" width=300 />
+
+---
+
+<img src="images/Umm_Kulthum_05.jpg" height=500 />
+
+---
+
+<img src="images/samjit.jpg" width=700 />
+
+---
+
+<iframe width=640 height=360 src="https://www.youtube.com/embed/DE4kdyaduVM"></iframe>
+
+---
+
+<img src="images/stlouis.jpg" width=700 />
+
+---
+
+# What is Makam, technically?
+
+---
+
+# λ-Prolog
+
+---
+
+# What have we done with Makam so far?
+
+---
+
+- VeriML (proof assistant tactics)
+- Ur/Web (type-safe web app programming)
+- TinyML (ML-like language)
+- System F to TAL (classic compilation paper)
+- J-Calc (modal justification logic calculus)
+- Syntax library (parser and pretty-printer generator)
+
+---
+
+# ICFP 2018 paper
+
+#### Implementation of an advanced type system
 
 - Simply typed lambda calculus
 - Multi-arity functions and letrec
@@ -79,227 +185,12 @@ For example, PLT Redex and the K framework can be used to implement operational 
 
 ---
 
-# Also in the paper
+## Directions for the future
 
-- Complex binding structures
-- GADT support in λProlog
-- Structural recursion
-- Use of reflective predicates
-
----
-
-<div class="fragment" data-fragment-index="1">
-<div style="position: absolute; top: 60px; left: 275px; color: black; font-weight: bold; font-size: 1.1em; background: rgba(255,255,255,0.8); width: 150px;">Roza<br/>(advisor)</div>
-<div style="position: absolute; top: 40px; left: 480px; color: black; font-weight: bold; font-size: 1.1em; background: rgba(255,255,255,0.8); width: 150px;">Hagop<br/>(student)</div>
-<div style="position: absolute; top: 400px; left: 75px; color: black; font-weight: bold; font-size: 0.9em; background: rgba(255,255,255,0.8); width: 200px;">Lambros<br/>from next door</div>
-</div>
-
----
-
-### Simply typed lambda calculus
-
----
-
-```makam-hidden
-term : type.
-typ : type.
-typeof : term -> typ -> prop.
-
-app : term -> term -> term.
-lam : typ -> (term -> term) -> term.
-arrow : typ -> typ -> typ.
-```
-
-$$\frac{\Gamma \vdash e_1 : \tau \to \tau' \hspace{1.0em} \Gamma \vdash e_2: \tau}{\Gamma \vdash e_1 \; e_2 : \tau'} \hspace{2em} \frac{\Gamma, x : \tau \vdash e : \tau'}{\Gamma \vdash \lambda x : \tau.e : \tau \to \tau'}$$
-
-```makam
-typeof (app E1 E2) T' :-
-  typeof E1 (arrow T T'), typeof E2 T.
-
-typeof (lam T X_E) (arrow T T') :-
-  (x:term -> typeof x T -> typeof (X_E x) T').
-```
-
----
-
-```makam
-typeof (lam _ (fun x => x)) T ?
-```
-
----
-
-```makam-noeval
-term : type.
-typ : type.
-typeof : term -> typ -> prop.
-```
-
----
-
-$$e := e_1 e_2 \; | \; λx:\tau.e \\ \tau := \tau_1 \to \tau_2$$
-
----
-
-$$e := \texttt{app}(e_1, e_2) \; | \; \texttt{lam}(\tau, x.e) \\ \tau := \texttt{arrow}(\tau_1, \tau_2)$$
-
----
-
-$$e := \texttt{app}(e_1, e_2) \; | \; \texttt{lam}(\tau, x.e) \\ \tau := \texttt{arrow}(\tau_1, \tau_2)$$
-
-```makam-noeval
-app : term -> term -> term.
-lam : typ -> (term -> term) -> term.
-arrow : typ -> typ -> typ.
-```
-
----
-
-### Multi-arity functions and let rec
-
----
-
-$$e := \texttt{lammany}(\vec{xs}.e) \; | \; \texttt{appmany}(e, \vec{es}) \\ \tau := \texttt{arrowmany}(\vec{\tau{}s}, \tau)$$
-
-<div class="fragment" data-fragment-index="1">
-```makam
-lammany : bindmany term term -> term.
-appmany : term -> list term -> term.
-arrowmany : list typ -> typ -> typ.
-```
-</div>
-
----
-
-<!-- $$\frac{\Gamma, \vec{xs} : \vec{\tau{}s} \vdash e : \tau}{\Gamma \vdash \texttt{lammany}(\vec{xs}.e) : \vec{\tau{}s} \to \tau} \hspace{2em} \frac{\Gamma \vdash e : \vec{\tau{}s} \to \tau \hspace{1em} \forall i.\Gamma \vdash e_i : \tau_i}{\Gamma \vdash \texttt{appmany}(e, \vec{es})}$$ -->
-
-```makam
-typeof (lammany XS_E) (arrowmany TS T) :-
-  openmany XS_E (pfun XS E =>
-    assumemany typeof XS TS (typeof E T)).
-
-typeof (appmany E ES) T :-
-  typeof E (arrowmany TS T), map typeof ES TS.
-```
-
----
-
-$$e := \texttt{letrec} \; \vec{xs} \; = \; \vec{es} \; \texttt{in} \; e$$
-
----
-
-$$e := \texttt{letrec}(\vec{xs}.(\vec{es}, e))$$
-
-<div class="fragment" data-fragment-index="1">
-```makam-noeval
-letrec : bindmany term
-           (list term * term) -> term.
-```
-</div>
-
----
-
-$$e := \texttt{letrec}(\vec{xs}.(\vec{es}, e))$$
-
-```makam
-letrec : vbindmany term N
-           (vector term N * term) -> term.
-```
-
----
-
-```makam
-typeof (letrec XS_DefsBody) T' :-
-  vopenmany XS_DefsBody (pfun XS (Defs, Body) =>
-    vassumemany typeof XS TS (vmap typeof Defs TS),
-    vassumemany typeof XS TS (typeof Body T')).
-```
-
----
-
-### ML-style generalization
-
-<p class="verse">
-``We mentioned Hindley-Milner / we don't want you to be sad. <br />
-This talk is very short I feel, / I hope it isn't bad. <br />
-Please come and find me afterwards / to talk about these things,<br />
-or if you'd like to learn about / the songs that Roza sings.''
-</p>
-
----
-
-```makam-hidden
-generalize : (Type: typ) (GeneralizedType: typ) -> prop.
-let : term -> (term -> term) -> term.
-get_types_in_environment : [A] A -> prop.
-tforall : (typ -> typ) -> typ.
-
-get_types_in_environment Gamma :-
-  refl.assume_get typeof Gamma.
-```
-
-$$\frac{\Gamma \vdash e : \tau \hspace{1em} \Gamma \vdash \tau \leadsto \tau_{gen} \hspace{1em} \Gamma, x : \tau_{gen} \vdash e' : \tau'}{\Gamma \vdash \text{let} \; x = e \; \text{in} \; e' : \tau'}$$
-
-```makam
-typeof (let E X_Body) T' :-
-  typeof E T,
-  generalize T Tgen,
-  (x:term -> typeof x Tgen -> typeof (X_Body x) T').
-```
-
----
-
-$$\frac{\vec{\alpha} = \text{fv}(\tau) - \text{fv}(\Gamma)}{\Gamma \vdash \tau \leadsto \forall \vec{\alpha'}.\tau[\vec{\alpha'}/\vec{\alpha}]}$$
-
----
-
-```makam
-generalize T T :-
-  not(findunif T (A: typ)).
-
-generalize T Res :-
-  findunif T A,
-  (a:typ ->
-    (replaceunif A a T (T' a),
-     generalize (T' a) (T'' a))),
-  get_types_in_environment GammaTypes,
-  if (hasunif A GammaTypes)
-  then (eq Res (T'' A))
-  else (eq Res (tforall T'')).
-```
-
----
-
-```makam-noeval
-replaceunif Which ToWhat Where ToWhat :-
-  refl.isunif Where,
-  refl.sameunif Which Where.
-
-replaceunif Which ToWhat Where Where :-
-  refl.isunif Where,
-  not(refl.sameunif Which Where).
-
-replaceunif Which ToWhat Where Result :-
-  not(refl.isunif Where),
-  structural_recursion @(replaceunif Which ToWhat)
-    Where Result.
-```
-
----
-
-```makam
-typeof (let (lam _ (fun x => x)) (fun id => id)) T ?
-```
-
----
-
-## Thank you!
-<p class="verse">
-``That's it, thank you so much folks, / the talk is now done.<br />
-A note before I leave though / and off this stage I run:<br />
-The company I work for / is hiring engineers<br />
-So if you're looking for a job / I'll pay for all the beers''
-</p>
-
+- Exploring new language design ideas
+- General solutions to implementation challenges
+- Bootstrapping Makam
+- Programming techniques course
 
 ---
 
@@ -310,47 +201,6 @@ So if you're looking for a job / I'll pay for all the beers''
 ---
 
 ## Tests:
-
-```makam-hidden
->> typeof (lam _ (fun x => x)) T ?
->> Yes:
->> T := arrow T1 T1.
-```
-
-```makam-hidden
->> typeof (lam _ (fun x => app x x)) T ?
->> Impossible.
-```
-
-```makam-hidden
-typeof (lammany (bind (fun x => bind (fun y => body (app y x))))) T ?
->> Yes:
->> T := arrowmany [T_X, arrow T_X T_Y] T_Y.
-```
-
-```makam-hidden
-typeof (letrec (vbind (fun f => vbody (vcons (lam _ (fun x => app f x)) vnil, f)))) T ?
->> Yes:
->> T := arrow T1 T2.
-```
-
-```makam-hidden
->> generalize (arrow T T) X ?
->> Yes:
->> X := tforall (fun a => arrow a a).
-```
-
-```makam-hidden
->> typeof (let (lam _ (fun x => x)) (fun id => id)) T ?
->> Yes:
->> T := tforall (fun a => arrow a a).
-```
-
-```makam-hidden
->> typeof (let (lam _ (fun x => let x (fun y => y))) (fun id => id)) T ?
->> Yes:
->> T := tforall (fun a => arrow a a).
-```
 
 ```makam
 run_tests X ?
