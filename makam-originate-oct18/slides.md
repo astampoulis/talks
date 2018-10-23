@@ -37,6 +37,10 @@ October 23rd, 2018
 tests : testsuite. %testsuite tests.
 typechecker : string -> prop.
 typechecker Program :- typechecker Program S, print_string `${S}\n`.
+traced_typechecker : string -> prop.
+traced_typechecker Program :- trace (typeof: expr -> typ -> prop) (typechecker Program S), print_string `${S}\n`.
+interpreter : string -> prop.
+interpreter Program :- interpreter Program S, print_string `${S}\n`.
 ```
 
 ---
@@ -51,9 +55,7 @@ typechecker Program :- typechecker Program S, print_string `${S}\n`.
 
 ---
 
-# Language design
-
-<img src="images/Csg_tree.png" width=500 />
+<img src="images/Csg_tree.png" width=500 class="plain" />
 
 ---
 
@@ -101,11 +103,11 @@ arrow : typ -> typ -> typ.
 
 typeof : expr -> typ -> prop.
 
-typeof (lam X_E) = (arrow T1 T2)
-  when (x:expr -> typeof x = T1 -> typeof (X_E x) = T2).
+typeof (lam X_E) (arrow T1 T2)
+  when (x:expr -> typeof x T1 -> typeof (X_E x) T2).
 
-typeof (app Ef Ea) = T2
-  when typeof Ef = (arrow T1 T2), typeof Ea = T1.
+typeof (app Ef Ea) T2
+  when typeof Ef (arrow T1 T2), typeof Ea T1.
 
 typeof (lam (fun x => x)) T ?
 ```
@@ -116,28 +118,32 @@ typeof (lam (fun x => x)) T ?
 
 ---
 
-<img src="images/akw.jpg" width=700 />
+<img class="plain" src="images/akw.jpg" width=700 />
 
 ---
 
-<img src="images/csail.jpg" width=700 />
+<img class="plain" src="images/csail.jpg" width=700 />
 
 ---
 
-<img src="images/adamc2018.jpg" height=500 />
+<img class="plain" src="images/adamc2018.jpg" height=500 />
 
 ---
 
-<img src="images/dale.jpg" width=300 />
-<img src="images/gopalan.jpg" width=300 />
+<img class="plain" src="images/dale.jpg" width=300 />
+<img class="plain" src="images/gopalan.jpg" width=300 />
 
 ---
 
-<img src="images/Umm_Kulthum_05.jpg" height=500 />
+<img class="plain" src="images/originate.jpg" width=700 />
 
 ---
 
-<img src="images/samjit.jpg" width=700 />
+<img class="plain" src="images/Umm_Kulthum_05.jpg" height=500 />
+
+---
+
+<img class="plain" src="images/samjit.jpg" width=700 />
 
 ---
 
@@ -145,7 +151,7 @@ typeof (lam (fun x => x)) T ?
 
 ---
 
-<img src="images/stlouis.jpg" width=700 />
+<img class="plain" src="images/stlouis.jpg" width=700 />
 
 ---
 
@@ -153,7 +159,306 @@ typeof (lam (fun x => x)) T ?
 
 ---
 
-# λ-Prolog
+# Makam is similar to a functional language
+
+---
+
+```makam-hidden
+expr : type.
+intconst : int -> expr.
+add : expr -> expr -> expr.
+var : string -> expr.
+let : string -> expr -> expr -> expr.
+eval : expr -> expr -> prop.
+
+by_struct_rec : [B] B -> B -> (C -> C -> prop) -> forall A (A -> A -> prop) -> prop.
+by_struct_rec X Y Cases Rec :-
+  dyn.eq X X', dyn.eq Y Y',
+  demand.case_otherwise
+    (Cases X' Y')
+    (structural Rec X Y).
+
+subst, subst_cases : [A] expr -> expr -> A -> A -> prop.
+subst Var Replacement E E' :-
+  by_struct_rec E E'
+    (subst_cases Var Replacement)
+    @(subst Var Replacement).
+
+subst_cases (var X) Replacement (var X) Replacement.
+
+subst_cases (var X) Replacement (let X E E') (let X E_Replaced E') :-
+  subst (var X) Replacement E E_Replaced.
+```
+
+```makam
+eval (intconst N) (intconst N).
+```
+
+<div class="fragment" style="margin-top: 0.1em">
+```makam
+eval (add E1 E2) (intconst N) :-
+  eval E1 (intconst N1),
+  eval E2 (intconst N2),
+  plus N1 N2 N.
+```
+</div>
+
+<div class="fragment" style="margin-top: 0.1em">
+```makam
+eval (let X E E') V' :-
+  eval E V,
+  subst (var X) V E' E'',
+  eval E'' V'.
+```
+</div>
+
+<div class="fragment" style="margin-top: 0.1em">
+```makam
+eval (let "x" (intconst 5)
+        (add (var "x") (var "x")))
+     V ?
+```
+</div>
+
+---
+
+# Makam supports generic programming
+
+---
+
+```makam-noeval
+subst Var Replacement E E' :-
+  by_struct_rec E E'
+    (subst_cases Var Replacement)
+    @(subst Var Replacement).
+
+subst_cases (var X) Replacement
+    (var X) Replacement.
+
+subst_cases (var X) Replacement
+    (let X E E') (let X E_Replaced E') :-
+  subst (var X) Replacement E E_Replaced.
+```
+
+---
+
+```makam-noeval
+expr : type.
+
+intconst : int -> expr.
+add : expr -> expr -> expr.
+let : string -> expr -> expr -> expr.
+
+eval : expr -> expr -> prop.
+```
+
+<div class="fragment" style="margin-top: 0.1em">
+```makam
+function : string -> expr -> expr.
+call : expr -> expr -> expr.
+```
+</div>
+
+---
+
+```makam
+eval (function X E) (function X E).
+eval (call E E') V :-
+  eval E' V',
+  eval E (function X Body),
+  subst (var X) V' Body Body',
+  eval Body' V.
+```
+
+---
+
+```makam
+interpreter {{ let f = (x) => x + 1 in f + 2 }} ?
+```
+
+```makam-hidden
+>> interpreter {{ let f = (x) => x + 1 in f(2) }} S ?
+>> Yes:
+>> S := "3 ".
+```
+
+<div class="fragment" style="margin-top: 0.1em;">
+```makam
+interpreter {{ let f = (x) => x + 1 in f + 2 }} ?
+```
+</div>
+
+```makam-hidden
+>> Impossible.
+```
+
+---
+
+# Makam is a ~~functional language~~ <br /> logic programming language
+
+---
+
+```makam-hidden
+typ : type.
+```
+
+$$\Gamma \vdash e : \tau$$
+
+```makam
+typeof : map string typ -> expr -> typ -> prop.
+```
+
+---
+
+$$\frac{\hspace{1em}}{\Gamma \vdash n : \texttt{int}}$$
+
+```makam
+tint : typ.
+typeof Ctx (intconst N) tint.
+```
+---
+
+$$\frac{x : \tau \in \Gamma}{\Gamma \vdash x : \tau}$$
+
+```makam
+typeof Ctx (var X) T :- map.find Ctx X T.
+```
+
+---
+
+$$\frac{\Gamma \vdash e : \tau_1 \to \tau_2 \hspace{1em} \Gamma \vdash e' : \tau_1}{\Gamma \vdash e \; e' : \tau_2}$$
+
+```makam
+arrow : typ -> typ -> typ.
+typeof Ctx (call E E') T2 :-
+  typeof Ctx E (arrow T1 T2),
+  typeof Ctx E' T1.
+```
+
+---
+
+$$\frac{\Gamma, \; x : \tau_1 \vdash e : \tau_2}{\Gamma \vdash \lambda x.e : \tau_1 \to \tau_2}$$
+
+```makam
+typeof Ctx (function X E) (arrow T1 T2) :-
+  typeof ((X, T1) :: Ctx) E T2.
+```
+
+---
+
+```makam
+typeof Ctx (add E1 E2) tint :-
+  typeof Ctx E1 tint, typeof Ctx E2 tint.
+
+typeof Ctx (let X E E') T' :-
+  typeof Ctx E T,
+  typeof ((X, T) :: Ctx) E' T'.
+```
+
+---
+
+```makam
+typeof []
+  (function "x" (add (var "x") (intconst 1)))
+  T ?
+```
+
+```makam-hidden
+>> Yes:
+>> T := arrow tint tint.
+```
+
+---
+
+<center><img class="plain" src="images/diagram1.svg" alt="Pattern" height="550" /></center>
+
+---
+
+<center><img class="plain" src="images/diagram2.svg" alt="Pattern" height="550" /></center>
+
+---
+
+# Makam supports λ-syntax trees
+
+--- 
+
+```makam-hidden
+constfold : expr -> expr -> prop.
+```
+
+```makam
+constfold (intconst N) (intconst N).
+constfold (add E1 E2) E' :-
+  constfold E1 E1',
+  constfold E2 E2',
+  if (eq E1' (intconst N1), eq E2' (intconst N2))
+  then (plus N1 N2 N, eq E' (intconst N))
+  else (eq E' (add E1' E2')).
+constfold (let X E E') E_Result :-
+  constfold E E_Folded,
+  subst (var X) E_Folded E' E'',
+  constfold E'' E_Result.
+constfold (var X) (var X).
+```
+
+---
+
+```makam
+constfold (let "x" (intconst 5)
+             (add (var "x") (var "y"))) E ?
+```
+
+<div class="fragment" style="margin-top: 0.1em">
+```makam
+constfold (let "x" (var "y")
+             (add (var "x") (var "y"))) E ?
+```
+</div>
+
+<div class="fragment" style="margin-top: 0.1em">
+```makam
+constfold (let "x" (var "y")
+          (let "y" (intconst 5)
+             (add (var "x") (var "y")))) E ?
+```
+</div>
+
+---
+
+<center><img class="plain" src="images/diagram3.svg" alt="Pattern" height="550" /></center>
+
+---
+
+<center><img class="plain" src="images/diagram4.svg" alt="Pattern" height="550" /></center>
+
+---
+
+```makam-hidden
+constfold (intconst N) (intconst N).
+constfold (add E1 E2) E' :-
+  constfold E1 E1',
+  constfold E2 E2',
+  if (eq E1' (intconst N1), eq E2' (intconst N2))
+  then (plus N1 N2 N, eq E' (intconst N))
+  else (eq E' (add E1' E2')).
+constfold (var X) (var X).
+```
+
+```makam
+let : expr -> (expr -> expr) -> expr.
+
+constfold (let E (X_E')) E_Result :-
+  constfold E E_Folded,
+  constfold (X_E' E_Folded) E_Result.
+```
+
+---
+
+```makam
+constfold (let (var "y") (fun x =>
+          (let (intconst 5) (fun y =>
+             (add x y))))) E ?
+```
 
 ---
 

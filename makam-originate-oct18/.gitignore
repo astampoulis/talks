@@ -4,3 +4,4 @@ offline.html
 dev.html
 devlocal.html
 .docker-built
+.makam-cache/

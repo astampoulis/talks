@@ -56,3 +56,5 @@ ul > li:before {
 code { white-space: pre-wrap !important; }
 
 .verse { font-size: 0.75em !important; }
+
+img.plain { border-radius: 5px; }
