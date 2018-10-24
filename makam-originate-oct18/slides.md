@@ -81,10 +81,6 @@ $$\frac{\Gamma, x : \tau_1 \vdash e : \tau_2}{\Gamma \vdash \texttt{lam}(x.e) : 
 - Type checking/type inference
 - Compilation phases
 
-<div class="fragment" style="margin-top: 20px;">
-# Languages and "relationships" between them
-</div>
-
 ---
 
 # Makam: a metalanguage for prototyping languages
@@ -222,26 +218,6 @@ eval (let "x" (intconst 5)
 
 ---
 
-# Makam supports generic programming
-
----
-
-```makam-noeval
-subst Var Replacement E E' :-
-  by_struct_rec E E'
-    (subst_cases Var Replacement)
-    @(subst Var Replacement).
-
-subst_cases (var X) Replacement
-    (var X) Replacement.
-
-subst_cases (var X) Replacement
-    (let X E E') (let X E_Replaced E') :-
-  subst (var X) Replacement E E_Replaced.
-```
-
----
-
 ```makam-noeval
 expr : type.
 
@@ -252,12 +228,53 @@ let : string -> expr -> expr -> expr.
 eval : expr -> expr -> prop.
 ```
 
-<div class="fragment" style="margin-top: 0.1em">
+---
+
+# Makam supports generic programming
+
+---
+
+```makam-noeval
+subst (var X) Replacement
+  (var X) Replacement.
+
+subst (var X) Replacement
+  (var Y) (var Y) :- not(eq X Y).
+
+subst (var X) Replacement
+    (let X E E') (let X E_Replaced E') :-
+  subst (var X) Replacement E E_Replaced.
+
+subst (var X) Replacement
+    (add E1 E2) (add E1' E2') :-
+  subst (var X) Replacement E1 E1',
+  subst (var X) Replacement E2 E2'.
+
+...
+```
+
+---
+
+```makam-noeval
+subst_cases (var X) Replacement
+    (var X) Replacement.
+
+subst_cases (var X) Replacement
+    (let X E E') (let X E_Replaced E') :-
+  subst (var X) Replacement E E_Replaced.
+
+subst Var Replacement E E' :-
+  by_struct_rec E E'
+    (subst_cases Var Replacement)
+    @(subst Var Replacement).
+```
+
+---
+
 ```makam
 function : string -> expr -> expr.
 call : expr -> expr -> expr.
 ```
-</div>
 
 ---
 
@@ -270,16 +287,31 @@ eval (call E E') V :-
   eval Body' V.
 ```
 
+<div class="fragment" style="margin-top: 0.1em">
+```makam
+subst_cases (var X) Replacement
+    (function X E) (function X E).
+```
+</div>
+
+```makam-hidden
+>> eval (call (function "x" (add (var "x") (intconst 1))) (intconst 2)) V ?
+>> Yes:
+>> V := intconst 3.
+
+>> eval (call (function "x" (function "y" (var "x"))) (intconst 2)) V ?
+>> Yes:
+>> V := function "y" (intconst 2).
+
+>> eval (call (function "x" (function "x" (var "x"))) (intconst 2)) V ?
+>> Yes:
+>> V := function "x" (var "x").
+```
+
 ---
 
 ```makam
-interpreter {{ let f = (x) => x + 1 in f + 2 }} ?
-```
-
-```makam-hidden
->> interpreter {{ let f = (x) => x + 1 in f(2) }} S ?
->> Yes:
->> S := "3 ".
+interpreter {{ let f = (x) => x + 1 in f(2) }} ?
 ```
 
 <div class="fragment" style="margin-top: 0.1em;">
@@ -289,6 +321,11 @@ interpreter {{ let f = (x) => x + 1 in f + 2 }} ?
 </div>
 
 ```makam-hidden
+>> interpreter {{ let f = (x) => x + 1 in f(2) }} S ?
+>> Yes:
+>> S := "3 ".
+
+>> interpreter {{ let f = (x) => x + 1 in f + 2 }} S ?
 >> Impossible.
 ```
 
@@ -344,9 +381,7 @@ typeof Ctx (function X E) (arrow T1 T2) :-
   typeof ((X, T1) :: Ctx) E T2.
 ```
 
----
-
-```makam
+```makam-hidden
 typeof Ctx (add E1 E2) tint :-
   typeof Ctx E1 tint, typeof Ctx E2 tint.
 
@@ -496,6 +531,10 @@ constfold (let (var "y") (fun x =>
 - General solutions to implementation challenges
 - Bootstrapping Makam
 - Programming techniques course
+
+---
+
+# Thanks!
 
 ---
 
